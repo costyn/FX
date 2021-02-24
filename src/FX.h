@@ -7,9 +7,10 @@
 
 class FX {
   public:
-    FX(CRGB * gLeds );
-    FX(CRGB * gLeds, CRGB * gMatrixLeds );
+    FX(CRGB * leds, uint16_t meshNumLeds );
+    FX(CRGB * leds, CRGB * matrixLeds, uint16_t meshNumLeds );
 
+    void spin();
     void FillLEDsFromPaletteColors() ;
     void fadeGlitter() ;
     void discoGlitter() ;
@@ -47,9 +48,9 @@ class FX {
     uint8_t mappedEase8InOutQuad( uint8_t p );
 
   private:
-    CRGB * leds;
+    CRGB * _leds;
     CRGB * _matrixLeds;
-    CRGBPalette16 currentPalette;
+    CRGBPalette16 _currentPalette;
     uint16_t _meshNumLeds;
     uint16_t _tempo;
     boolean _alone;
