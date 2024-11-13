@@ -244,7 +244,7 @@ void FX::twirlers(uint8_t numTwirlers, bool opposing ) {
         // pos = (clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i) % _meshNumLeds ;
         pos = mod((clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i),_meshNumLeds) ;
       }
-      if ( -leds[pos] ) { // FALSE if currently BLACK - don't blend with black
+      if ( _leds[pos] ) { // FALSE if currently BLACK - don't blend with black
         _leds[pos] = blend( _leds[pos], antiClockwiseColor, 128 ) ;
       } else {
         _leds[pos] = antiClockwiseColor ;
