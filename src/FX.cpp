@@ -1,43 +1,49 @@
 #include "FX.h"
 
-FX::FX(CRGB * leds, uint16_t meshNumLeds ){
+FX::FX(CRGB *leds, uint16_t meshNumLeds)
+{
   _leds = leds;
   _meshNumLeds = meshNumLeds;
 }
 
-FX::FX(CRGB * leds, CRGB * matrixLeds, uint16_t meshNumLeds ){
+FX::FX(CRGB *leds, CRGB *matrixLeds, uint16_t meshNumLeds)
+{
   _leds = leds;
   _matrixLeds = matrixLeds;
   _meshNumLeds = meshNumLeds;
 }
 
-
-void FX::spin() {
-  uint16_t ledpos = map8(beat8(40), 0, _meshNumLeds-1 );
+void FX::spin()
+{
+  uint16_t ledpos = map8(beat8(40), 0, _meshNumLeds - 1);
   _leds[ledpos] = CRGB::Red;
-  for (uint8_t i = 0; i < _meshNumLeds; i++) {
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
     _leds[i].nscale8(250);
   }
 }
 
-#define STEPS       3   // How wide the bands of color are.  1 = more like a gradient, 10 = more like stripes
+#define STEPS 3 // How wide the bands of color are.  1 = more like a gradient, 10 = more like stripes
 
-void FX::FillLEDsFromPaletteColors() {
-  static uint8_t startIndex = 1;  // initialize at start
-  static boolean firstPatternIteration = true; 
-  const int8_t flowDir = -1 ;
+void FX::FillLEDsFromPaletteColors()
+{
+  static uint8_t startIndex = 1; // initialize at start
+  static boolean firstPatternIteration = true;
+  const int8_t flowDir = -1;
 
-  if( firstPatternIteration ) {
-    startIndex = 1 ;
-    firstPatternIteration = false ;   // reset flag
+  if (firstPatternIteration)
+  {
+    startIndex = 1;
+    firstPatternIteration = false; // reset flag
   }
 
-  startIndex += flowDir ;
+  startIndex += flowDir;
 
-  uint8_t colorIndex = startIndex ;
+  uint8_t colorIndex = startIndex;
 
-  for ( uint8_t i = 0; i < _meshNumLeds; i++) {
-    _leds[i] = ColorFromPalette( _currentPalette, colorIndex, 255, LINEARBLEND );
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
+    _leds[i] = ColorFromPalette(_currentPalette, colorIndex, 255, LINEARBLEND);
     colorIndex += STEPS;
   }
 
@@ -48,49 +54,49 @@ void FX::FillLEDsFromPaletteColors() {
   //   addGlitter(25);
   // }
 
-// DEBUG_PRINT("maxBright: ");
-// DEBUG_PRINTLN(maxBright);
+  // DEBUG_PRINT("maxBright: ");
+  // DEBUG_PRINTLN(maxBright);
 
-//  taskCurrentPatternRun.setInterval( beatsin16( _tempo, 1500, 50000) ) ; // microseconds
-// taskCurrentPatternRun.setInterval( beatsin16( _tempo, 5, 50 ) ) ;
+  //  taskCurrentPatternRun.setInterval( beatsin16( _tempo, 1500, 50000) ) ; // microseconds
+  // taskCurrentPatternRun.setInterval( beatsin16( _tempo, 5, 50 ) ) ;
 }
 
-
-
-void FX::fadeGlitter() {
+void FX::fadeGlitter()
+{
   addGlitter(90);
   FastLED.show();
   fadeToBlackBy(_leds, _meshNumLeds, 200);
 }
 
-
-
-void FX::discoGlitter() {
+void FX::discoGlitter()
+{
   fill_solid(_leds, _meshNumLeds, CRGB::Black);
   addGlitter(240);
 }
 
-
-
 #ifdef RT_STROBE1
-void FX::strobe1() {
-  if ( tapTempo.beatProgress() > 0.95 ) {
-    fill_solid(_leds, _meshNumLeds, CRGB::White ); // yaw for color
-  } else if ( tapTempo.beatProgress() > 0.80 and tapTempo.beatProgress() < 0.85 ) {
+void FX::strobe1()
+{
+  if (tapTempo.beatProgress() > 0.95)
+  {
+    fill_solid(_leds, _meshNumLeds, CRGB::White); // yaw for color
+  }
+  else if (tapTempo.beatProgress() > 0.80 and tapTempo.beatProgress() < 0.85)
+  {
     //    fill_solid(_leds, _meshNumLeds, CRGB::White );
-  } else {
+  }
+  else
+  {
     fill_solid(_leds, _meshNumLeds, CRGB::Black); // black
   }
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
 }
 #endif
 
-
-
 #ifdef RT_FIRE2012
-#define COOLING  55
+#define COOLING 55
 #define SPARKING 120
-#define FIRELEDS round( _meshNumLeds / 2 )
+#define FIRELEDS round(_meshNumLeds / 2)
 
 // TODO: replace with original Fire2012 for LED strips
 
@@ -104,25 +110,29 @@ void FX::Fire2012()
   static byte heat[FIRELEDS];
 
   // Step 1.  Cool down every cell a little
-  for ( uint8_t i = 0; i < FIRELEDS; i++) {
-    heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / FIRELEDS) + 2));
+  for (uint8_t i = 0; i < FIRELEDS; i++)
+  {
+    heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / FIRELEDS) + 2));
   }
 
   // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-  for ( int k = FIRELEDS - 1; k >= 2; k--) {
-    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
+  for (int k = FIRELEDS - 1; k >= 2; k--)
+  {
+    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
   }
 
   // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-  if ( random8() < SPARKING ) {
+  if (random8() < SPARKING)
+  {
     int y = random8(7);
-    heat[y] = qadd8( heat[y], random8(160, 255) );
+    heat[y] = qadd8(heat[y], random8(160, 255));
   }
 
   // Step 4.  Map from heat cells to LED colors
-  for ( int j = FIRELEDS; j < _meshNumLeds; j++) {
-    int heatIndex = j - FIRELEDS ;
-    CRGB color = HeatColor( heat[heatIndex]);
+  for (int j = FIRELEDS; j < _meshNumLeds; j++)
+  {
+    int heatIndex = j - FIRELEDS;
+    CRGB color = HeatColor(heat[heatIndex]);
     _leds[j] = color;
   }
 
@@ -134,68 +144,69 @@ void FX::Fire2012()
   //    ledindex 1 = heat[43]
   //    ledindex 0 = heat[44]
 
-  for ( int j = 0; j <= FIRELEDS; j++) {
-    int ledIndex = FIRELEDS - j ;
-    CRGB color = HeatColor( heat[j]);
+  for (int j = 0; j <= FIRELEDS; j++)
+  {
+    int ledIndex = FIRELEDS - j;
+    CRGB color = HeatColor(heat[j]);
     _leds[ledIndex] = color;
   }
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
   // FastLED.show();
 
 } // end Fire2012
 #endif
-
-
-
 
 #ifdef WHITESTRIPE
 #define STRIPE_LENGTH 5
 // This routines goes "over" other patterns, remembering/copying the
 // pattern it is writing over and writing it back behind it.
 
-void FX::whiteStripe() {
-  static CRGB patternCopy[STRIPE_LENGTH] ;
-  static int startLed = 0 ;
+void FX::whiteStripe()
+{
+  static CRGB patternCopy[STRIPE_LENGTH];
+  static int startLed = 0;
 
-  if ( taskWhiteStripe.getInterval() != WHITESTRIPE_SPEED ) {
-    taskWhiteStripe.setInterval( WHITESTRIPE_SPEED ) ;
+  if (taskWhiteStripe.getInterval() != WHITESTRIPE_SPEED)
+  {
+    taskWhiteStripe.setInterval(WHITESTRIPE_SPEED);
   }
 
-  if ( startLed == 0 ) {
-    for (uint8_t i = 0; i < STRIPE_LENGTH ; i++ ) {
+  if (startLed == 0)
+  {
+    for (uint8_t i = 0; i < STRIPE_LENGTH; i++)
+    {
       patternCopy[i] = _leds[i];
     }
   }
 
   // 36 40   44 48 52 56   60
 
-  _leds[startLed] = patternCopy[0] ;
-  for (uint8_t i = 0; i < STRIPE_LENGTH - 2; i++ ) {
-    patternCopy[i] = patternCopy[i + 1] ;
+  _leds[startLed] = patternCopy[0];
+  for (uint8_t i = 0; i < STRIPE_LENGTH - 2; i++)
+  {
+    patternCopy[i] = patternCopy[i + 1];
   }
-  patternCopy[STRIPE_LENGTH - 1] = _leds[startLed + STRIPE_LENGTH] ;
+  patternCopy[STRIPE_LENGTH - 1] = _leds[startLed + STRIPE_LENGTH];
 
   fill_gradient(_leds, startLed + 1, CHSV(0, 0, 255), startLed + STRIPE_LENGTH, CHSV(0, 0, 255), SHORTEST_HUES);
 
-  startLed++ ;
+  startLed++;
 
-  if ( startLed + STRIPE_LENGTH == _meshNumLeds - 1) { // LED nr 90 is index 89
-    for (uint8_t i = startLed; i < startLed + STRIPE_LENGTH; i++ ) {
+  if (startLed + STRIPE_LENGTH == _meshNumLeds - 1)
+  { // LED nr 90 is index 89
+    for (uint8_t i = startLed; i < startLed + STRIPE_LENGTH; i++)
+    {
       _leds[i] = patternCopy[i];
     }
 
-    startLed = 0 ;
-    taskWhiteStripe.setInterval(random16(4000, 10000)) ;
+    startLed = 0;
+    taskWhiteStripe.setInterval(random16(4000, 10000));
   }
 
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
   // FastLED.show();
 }
 #endif
-
-
-
-
 
 #if defined(RT_TWIRL1) || defined(RT_TWIRL2) || defined(RT_TWIRL4) || defined(RT_TWIRL6) || defined(RT_TWIRL2_O) || defined(RT_TWIRL4_O) || defined(RT_TWIRL6_O)
 // Counter rotating twirlers with blending
@@ -204,208 +215,232 @@ void FX::whiteStripe() {
 // 4 twirler - 2 white = 120/2
 // 6 twirler - 3 white = 120/3
 
-void FX::twirlers(uint8_t numTwirlers, bool opposing ) {
-  uint8_t pos = 0 ;
-  uint8_t speedCorrection = 0 ;
+void FX::twirlers(uint8_t numTwirlers, bool opposing)
+{
+  uint8_t pos = 0;
+  uint8_t speedCorrection = 0;
 
-  if ( numTwirlers == 1 ) {
-    speedCorrection = 1 ;
-  } else {
-    speedCorrection = numTwirlers / 2 ;
+  if (numTwirlers == 1)
+  {
+    speedCorrection = 1;
   }
-  uint8_t clockwiseFirst = lerp8by8( 0, _meshNumLeds, beat8( _tempo / speedCorrection )) ;
-  const CRGB clockwiseColor = CRGB::White ;
-  const CRGB antiClockwiseColor = CRGB::Red ;
+  else
+  {
+    speedCorrection = numTwirlers / 2;
+  }
+  uint8_t clockwiseFirst = lerp8by8(0, _meshNumLeds, beat8(_tempo / speedCorrection));
+  const CRGB clockwiseColor = CRGB::White;
+  const CRGB antiClockwiseColor = CRGB::Red;
 
-  if ( opposing ) {
-    fadeall(map( numTwirlers, 1, 6, 240, 180 ));
-  } else {
-    fadeall(map( numTwirlers, 1, 6, 240, 180 ));
+  if (opposing)
+  {
+    fadeall(map(numTwirlers, 1, 6, 240, 180));
+  }
+  else
+  {
+    fadeall(map(numTwirlers, 1, 6, 240, 180));
   }
 
-  for (uint8_t i = 0 ; i < numTwirlers ; i++) {
-    if ( (i % 2) == 0 ) {
+  for (uint8_t i = 0; i < numTwirlers; i++)
+  {
+    if ((i % 2) == 0)
+    {
       // pos = (clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i) % _meshNumLeds ;
-      pos = mod((clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i), _meshNumLeds) ;
-      if ( _leds[pos] ) { // FALSE if currently BLACK - don't blend with black
-        _leds[pos] = blend( _leds[pos], clockwiseColor, 128 ) ;
-      } else {
-        _leds[pos] = clockwiseColor ;
+      pos = mod((clockwiseFirst + round(_meshNumLeds / numTwirlers) * i), _meshNumLeds);
+      if (_leds[pos])
+      { // FALSE if currently BLACK - don't blend with black
+        _leds[pos] = blend(_leds[pos], clockwiseColor, 128);
       }
+      else
+      {
+        _leds[pos] = clockwiseColor;
+      }
+    }
+    else
+    {
 
-    } else {
-
-      if ( opposing ) {
+      if (opposing)
+      {
         // uint8_t antiClockwiseFirst = _meshNumLeds - (lerp8by8( 0, _meshNumLeds, beat8( _tempo / speedCorrection ))) % _meshNumLeds ;
-        uint8_t antiClockwiseFirst = _meshNumLeds - mod(lerp8by8( 0, _meshNumLeds, beat8( _tempo / speedCorrection )), _meshNumLeds) ;
+        uint8_t antiClockwiseFirst = _meshNumLeds - mod(lerp8by8(0, _meshNumLeds, beat8(_tempo / speedCorrection)), _meshNumLeds);
         // pos = (antiClockwiseFirst + round( _meshNumLeds / numTwirlers ) * i) % _meshNumLeds ;
-        pos = mod((antiClockwiseFirst + round( _meshNumLeds / numTwirlers ) * i),_meshNumLeds) ;
-      } else {
-        // pos = (clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i) % _meshNumLeds ;
-        pos = mod((clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i),_meshNumLeds) ;
+        pos = mod((antiClockwiseFirst + round(_meshNumLeds / numTwirlers) * i), _meshNumLeds);
       }
-      if ( _leds[pos] ) { // FALSE if currently BLACK - don't blend with black
-        _leds[pos] = blend( _leds[pos], antiClockwiseColor, 128 ) ;
-      } else {
-        _leds[pos] = antiClockwiseColor ;
+      else
+      {
+        // pos = (clockwiseFirst + round( _meshNumLeds / numTwirlers ) * i) % _meshNumLeds ;
+        pos = mod((clockwiseFirst + round(_meshNumLeds / numTwirlers) * i), _meshNumLeds);
+      }
+      if (_leds[pos])
+      { // FALSE if currently BLACK - don't blend with black
+        _leds[pos] = blend(_leds[pos], antiClockwiseColor, 128);
+      }
+      else
+      {
+        _leds[pos] = antiClockwiseColor;
       }
     }
   }
 } // end twirlers()
 #endif
 
-
-void FX::heartbeat() {
+void FX::heartbeat()
+{
   const uint8_t hbTable[] = {
-    25,
-    61,
-    105,
-    153,
-    197,
-    233,
-    253,
-    255,
-    252,
-    243,
-    230,
-    213,
-    194,
-    149,
-    101,
-    105,
-    153,
-    197,
-    216,
-    233,
-    244,
-    253,
-    255,
-    255,
-    252,
-    249,
-    243,
-    237,
-    230,
-    223,
-    213,
-    206,
-    194,
-    184,
-    174,
-    162,
-    149,
-    138,
-    126,
-    112,
-    101,
-    91,
-    78,
-    69,
-    62,
-    58,
-    51,
-    47,
-    43,
-    39,
-    37,
-    35,
-    29,
-    25,
-    22,
-    20,
-    19,
-    15,
-    12,
-    9,
-    8,
-    6,
-    5,
-    3,
+      25,
+      61,
+      105,
+      153,
+      197,
+      233,
+      253,
+      255,
+      252,
+      243,
+      230,
+      213,
+      194,
+      149,
+      101,
+      105,
+      153,
+      197,
+      216,
+      233,
+      244,
+      253,
+      255,
+      255,
+      252,
+      249,
+      243,
+      237,
+      230,
+      223,
+      213,
+      206,
+      194,
+      184,
+      174,
+      162,
+      149,
+      138,
+      126,
+      112,
+      101,
+      91,
+      78,
+      69,
+      62,
+      58,
+      51,
+      47,
+      43,
+      39,
+      37,
+      35,
+      29,
+      25,
+      22,
+      20,
+      19,
+      15,
+      12,
+      9,
+      8,
+      6,
+      5,
+      3,
   };
 
-  #define NUM_STEPS (sizeof(hbTable)/sizeof(uint8_t *)) //array size
+#define NUM_STEPS (sizeof(hbTable) / sizeof(uint8_t *)) // array size
 
   // beat8 generates index 0-255 (fract8) as per getBPM(). lerp8by8 interpolates that to array index:
-  static float hbTempo ;
+  static float hbTempo;
 
-  if(_alone) {
-    hbTempo = _tempo/2 ;
-  } else {
-    hbTempo = _tempo ;
+  if (_alone)
+  {
+    hbTempo = _tempo / 2;
   }
-  uint8_t hbIndex = lerp8by8( 0, NUM_STEPS, beat8( hbTempo )) ;
+  else
+  {
+    hbTempo = _tempo;
+  }
+  uint8_t hbIndex = lerp8by8(0, NUM_STEPS, beat8(hbTempo));
 
 #ifdef ATOMMATRIX
-  uint8_t brightness = lerp8by8( 0, 80, hbTable[hbIndex] ) ;
+  uint8_t brightness = lerp8by8(0, 120, hbTable[hbIndex]);
   drawHeart(brightness);
 #else
-  uint8_t brightness = lerp8by8( 0, 20, hbTable[hbIndex] ) ;
+  uint8_t brightness = lerp8by8(0, 20, hbTable[hbIndex]);
   fill_solid(_leds, _meshNumLeds, CHSV(0, 255, brightness));
 #endif
 }
 
 void FX::drawHeart(int brightness)
 {
-    memset(_matrixLeds, 0, sizeof(*_matrixLeds));
-    CHSV c = CHSV(0, 255, brightness);
-    CHSV alt_color = CHSV(0, 255, brightness);
-    if (_alone) {
-      alt_color = CHSV(180, 255, brightness);
-    }
-    // DEBUG_PRINTLN(brightness);
+  memset(_matrixLeds, 0, sizeof(*_matrixLeds));
+  CHSV c = CHSV(0, 255, brightness);
+  CHSV alt_color = CHSV(0, 255, brightness);
+  if (_alone)
+  {
+    alt_color = CHSV(180, 255, brightness);
+  }
 
-    setled(1,0,c);
-    setled(3,0,c);
+  setled(1, 0, c);
+  setled(3, 0, c);
 
-    setled(0,1,c);
-    setled(1,1,alt_color);
-    setled(2,1,c);
-    setled(3,1,alt_color);
-    setled(4,1,c);
+  setled(0, 1, c);
+  setled(1, 1, alt_color);
+  setled(2, 1, c);
+  setled(3, 1, alt_color);
+  setled(4, 1, c);
 
-    setled(0,2,c);
-    setled(1,2,alt_color);
-    setled(2,2,alt_color);
-    setled(3,2,alt_color);
-    setled(4,2,c);
+  setled(0, 2, c);
+  setled(1, 2, alt_color);
+  setled(2, 2, alt_color);
+  setled(3, 2, alt_color);
+  setled(4, 2, c);
 
-    setled(1,3,c);
-    setled(2,3,alt_color);
-    setled(3,3,c);
+  setled(1, 3, c);
+  setled(2, 3, alt_color);
+  setled(3, 3, c);
 
-    setled(2,4,c);
+  setled(2, 4, c);
 }
 
 void FX::setled(int x, int y, CHSV c)
 {
-    _matrixLeds[y * 5 + x] = c;
+  _matrixLeds[y * 5 + x] = c;
 }
-
 
 #if defined(RT_FASTLOOP) || defined(RT_FASTLOOP2)
 
-#define FL_LENGHT 20   // how many LEDs should be in the "stripe"
+#define FL_LENGHT 20 // how many LEDs should be in the "stripe"
 #define FL_MIDPOINT FL_LENGHT / 2
 #define MAX_LOOP_SPEED 5
 
-void FX::fastLoop(bool reverse) {
-  static int16_t startP = 0 ;
-  static uint8_t hue = 0 ;
+void FX::fastLoop(bool reverse)
+{
+  static int16_t startP = 0;
+  static uint8_t hue = 0;
 
-  if ( ! reverse ) {
-    startP = lerp8by8( 0, _meshNumLeds, beat8( _tempo )) ;  // start position
-  } else {
-    startP += map( sin8( beat8( _tempo / 4 )), 0, 255, -MAX_LOOP_SPEED, MAX_LOOP_SPEED + 1 ) ; // it was hard to write, it should be hard to undestand :grimacing:
+  if (!reverse)
+  {
+    startP = lerp8by8(0, _meshNumLeds, beat8(_tempo)); // start position
+  }
+  else
+  {
+    startP += map(sin8(beat8(_tempo / 4)), 0, 255, -MAX_LOOP_SPEED, MAX_LOOP_SPEED + 1); // it was hard to write, it should be hard to undestand :grimacing:
   }
 
   fill_solid(_leds, _meshNumLeds, CRGB::Black);
   fillGradientRing(startP, CHSV(hue, 255, 0), startP + FL_MIDPOINT, CHSV(hue, 255, 255));
   fillGradientRing(startP + FL_MIDPOINT + 1, CHSV(hue, 255, 255), startP + FL_LENGHT, CHSV(hue, 255, 0));
 
-  hue++  ;
+  hue++;
 }
 #endif
-
 
 #if defined(RT_NOISE_LAVA) || defined(RT_NOISE_PARTY)
 // FastLED library NoisePlusPalette routine rewritten for 1 dimensional LED strip
@@ -419,7 +454,8 @@ void FX::fastLoop(bool reverse) {
 
 // if current palette is a 'loop', add a slowly-changing base value
 
-void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop ) {
+void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop)
+{
   static uint8_t noise[MAX_MESH_LEDS];
 
   static uint16_t x = random16();
@@ -431,11 +467,13 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop ) {
   // The amount of data smoothing we're doing depends on "speed".
   uint8_t dataSmoothing = 0;
 
-  if ( speed < 50) {
+  if (speed < 50)
+  {
     dataSmoothing = 200 - (speed * 4);
   }
 
-  for (uint8_t i = 0; i < _meshNumLeds; i++) {
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
     int ioffset = scale * i;
 
     uint8_t data = inoise8(x + ioffset, y, z);
@@ -446,9 +484,10 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop ) {
     data = qsub8(data, 16);
     data = qadd8(data, scale8(data, 39));
 
-    if ( dataSmoothing ) {
+    if (dataSmoothing)
+    {
       uint8_t olddata = noise[i];
-      uint8_t newdata = scale8( olddata, dataSmoothing) + scale8( data, 256 - dataSmoothing);
+      uint8_t newdata = scale8(olddata, dataSmoothing) + scale8(data, 256 - dataSmoothing);
       data = newdata;
     }
 
@@ -463,29 +502,34 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop ) {
 
   static uint8_t ihue = 0;
 
-  for (uint8_t i = 0; i < _meshNumLeds; i++) {
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
     // We use the value at the i coordinate in the noise
     // array for our brightness, and a 'random' value from _meshNumLeds - 1
     // for our pixel's index into the color palette.
 
     uint8_t index = noise[i];
-    uint8_t bri =   noise[_meshNumLeds - i];
+    uint8_t bri = noise[_meshNumLeds - i];
     // uint8_t bri =  sin(noise[_meshNumLeds - i]);  // more light/dark variation
 
     // if this palette is a 'loop', add a slowly-changing base value
-    if ( colorLoop) {
+    if (colorLoop)
+    {
       index += ihue;
     }
 
     // brighten up, as the color palette itself often contains the
     // light/dark dynamic range desired
-    if ( bri > 127 ) {
+    if (bri > 127)
+    {
       bri = 255;
-    } else {
-      bri = dim8_raw( bri * 2);
+    }
+    else
+    {
+      bri = dim8_raw(bri * 2);
     }
 
-    CRGB color = ColorFromPalette( _currentPalette, index, bri);
+    CRGB color = ColorFromPalette(_currentPalette, index, bri);
     _leds[i] = color;
   }
   ihue += 1;
@@ -495,32 +539,29 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop ) {
 }
 #endif
 
-
-
-
 #ifdef RT_BOUNCEBLEND
-void FX::bounceBlend() {
-  uint8_t speed = beatsin8( _tempo, 0, 255);
+void FX::bounceBlend()
+{
+  uint8_t speed = beatsin8(_tempo, 0, 255);
   static long runCounter = 0;
-  static uint8_t startLed = 1 ;
-  CHSV endclr = blend(CHSV(0, 255, 255), CHSV(160, 255, 255) , speed);
-  CHSV midclr = blend(CHSV(160, 255, 255) , CHSV(0, 255, 255) , speed);
+  static uint8_t startLed = 1;
+  CHSV endclr = blend(CHSV(0, 255, 255), CHSV(160, 255, 255), speed);
+  CHSV midclr = blend(CHSV(160, 255, 255), CHSV(0, 255, 255), speed);
   fillGradientRing(startLed, endclr, startLed + _meshNumLeds / 2, midclr);
   fillGradientRing(startLed + _meshNumLeds / 2 + 1, midclr, startLed + _meshNumLeds, endclr);
 
   // FastLED.setBrightness( maxBright ) ;
   // FastLED.show();
 
-  if ( (runCounter % 10) == 0 ) {
-    startLed++ ;
-    if ( startLed + 1 == _meshNumLeds ) startLed = 0  ;
+  if ((runCounter % 10) == 0)
+  {
+    startLed++;
+    if (startLed + 1 == _meshNumLeds)
+      startLed = 0;
   }
   runCounter++;
 } // end bounceBlend()
 #endif
-
-
-
 
 /* juggle_pal
 Originally by: Mark Kriegsman
@@ -529,33 +570,67 @@ Modified further by: Costyn van Dongen
 Date: May, 2017
 */
 #ifdef RT_JUGGLE_PAL
-void FX::jugglePal() {                                             // A time (rather than loop) based demo sequencer. This gives us full control over the length of each sequence.
+void FX::jugglePal()
+{ // A time (rather than loop) based demo sequencer. This gives us full control over the length of each sequence.
 
-  static uint8_t    numdots =   4;                                     // Number of dots in use.
-  static uint8_t   thisfade =   2;                                     // How long should the trails be. Very low value = longer trails.
-  static uint8_t   thisdiff =  16;                                     // Incremental change in hue between each dot.
-  static uint8_t    thishue =   0;                                     // Starting hue.
-  static uint8_t     curhue =   0;                                     // The current hue
-  static uint8_t   thisbeat =   35;                                     // Higher = faster movement.
+  static uint8_t numdots = 4;   // Number of dots in use.
+  static uint8_t thisfade = 2;  // How long should the trails be. Very low value = longer trails.
+  static uint8_t thisdiff = 16; // Incremental change in hue between each dot.
+  static uint8_t thishue = 0;   // Starting hue.
+  static uint8_t curhue = 0;    // The current hue
+  static uint8_t thisbeat = 35; // Higher = faster movement.
 
-  uint8_t secondHand = ( get_millisecond_timer() / 1000) % 60;                // Change '60' to a different value to change duration of the loop (also change timings below)
+  uint8_t secondHand = (get_millisecond_timer() / 1000) % 60; // Change '60' to a different value to change duration of the loop (also change timings below)
   static uint8_t lastSecond = 99;                             // This is our 'debounce' variable.
 
-  if (lastSecond != secondHand) {                             // Debounce to make sure we're not repeating an assignment.
+  if (lastSecond != secondHand)
+  { // Debounce to make sure we're not repeating an assignment.
     lastSecond = secondHand;
-    switch (secondHand) {
-      case  0: numdots = 1; thisbeat = _tempo / 2; thisdiff = 8;  thisfade = 8;  thishue = 0;   break;
-      case  7: numdots = 2; thisbeat = _tempo / 2; thisdiff = 4;  thisfade = 12; thishue = 0;   break;
-      case 25: numdots = 4; thisbeat = _tempo / 2; thisdiff = 24; thisfade = 50; thishue = 128; break;
-      case 40: numdots = 2; thisbeat = _tempo / 2; thisdiff = 16; thisfade = 50; thishue = 0; break;
-      case 52: numdots = 4; thisbeat = _tempo / 2; thisdiff = 24; thisfade = 80; thishue = 160; break;
+    switch (secondHand)
+    {
+    case 0:
+      numdots = 1;
+      thisbeat = _tempo / 2;
+      thisdiff = 8;
+      thisfade = 8;
+      thishue = 0;
+      break;
+    case 7:
+      numdots = 2;
+      thisbeat = _tempo / 2;
+      thisdiff = 4;
+      thisfade = 12;
+      thishue = 0;
+      break;
+    case 25:
+      numdots = 4;
+      thisbeat = _tempo / 2;
+      thisdiff = 24;
+      thisfade = 50;
+      thishue = 128;
+      break;
+    case 40:
+      numdots = 2;
+      thisbeat = _tempo / 2;
+      thisdiff = 16;
+      thisfade = 50;
+      thishue = 0;
+      break;
+    case 52:
+      numdots = 4;
+      thisbeat = _tempo / 2;
+      thisdiff = 24;
+      thisfade = 80;
+      thishue = 160;
+      break;
     }
   }
 
-  curhue = thishue;                                           // Reset the hue values.
+  curhue = thishue; // Reset the hue values.
   fadeToBlackBy(_leds, _meshNumLeds, thisfade);
 
-  for ( uint8_t i = 0; i < numdots; i++) {
+  for (uint8_t i = 0; i < numdots; i++)
+  {
     _leds[beatsin16(thisbeat + i + numdots, 0, _meshNumLeds - 1)] += ColorFromPalette(RainbowColors_p, curhue, 255, LINEARBLEND); // Munge the values and pick a colour from the palette
     curhue += thisdiff;
   }
@@ -566,15 +641,16 @@ void FX::jugglePal() {                                             // A time (ra
 } // end jugglePal()
 #endif
 
-
 #ifdef RT_PULSE_3
 #define PULSE_WIDTH 10
-void FX::pulse3() {
-  uint8_t width = beatsin8( constrain( _tempo * 2, 0, 255), 0, PULSE_WIDTH ) ; // can't use BPM > 255
-  uint8_t hue = beatsin8( 1, 0, 255) ;
-  static uint8_t middle = 0 ;
+void FX::pulse3()
+{
+  uint8_t width = beatsin8(constrain(_tempo * 2, 0, 255), 0, PULSE_WIDTH); // can't use BPM > 255
+  uint8_t hue = beatsin8(1, 0, 255);
+  static uint8_t middle = 0;
 
-  if ( width == 1 ) {
+  if (width == 1)
+  {
     middle = taskCurrentPatternRun.getRunCounter() % 60 + taskCurrentPatternRun.getRunCounter() % 2;
   }
 
@@ -582,38 +658,39 @@ void FX::pulse3() {
   fillGradientRing(middle - width, CHSV(hue, 255, 0), middle, CHSV(hue, 255, 255));
   fillGradientRing(middle, CHSV(hue, 255, 255), middle + width, CHSV(hue, 255, 0));
 
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
   // FastLED.show() ;
 }
 #endif
 
 #ifdef RT_PULSE_5
-void FX::pulse5( uint8_t numPulses, boolean leadingDot) {
-  uint8_t spacing = _meshNumLeds / numPulses ;
-  uint8_t pulseWidth = (spacing / 2) - 1 ; // leave 1 led empty at max
-  uint8_t middle = beatsin8( 5, 0, _meshNumLeds / 2) ;
-  uint8_t width = beatsin8( _tempo, 0, pulseWidth) ;
-  uint8_t hue = beatsin8( _tempo, 0, 30) ;
+void FX::pulse5(uint8_t numPulses, boolean leadingDot)
+{
+  uint8_t spacing = _meshNumLeds / numPulses;
+  uint8_t pulseWidth = (spacing / 2) - 1; // leave 1 led empty at max
+  uint8_t middle = beatsin8(5, 0, _meshNumLeds / 2);
+  uint8_t width = beatsin8(_tempo, 0, pulseWidth);
+  uint8_t hue = beatsin8(_tempo, 0, 30);
 
   fill_solid(_leds, _meshNumLeds, CRGB::Black);
 
-  for ( uint8_t i = 0 ; i < numPulses; i++ ) {
-    uint8_t offset = spacing * i ;
+  for (uint8_t i = 0; i < numPulses; i++)
+  {
+    uint8_t offset = spacing * i;
     fillGradientRing(middle - width + offset, CHSV(hue, 255, 0), middle + offset, CHSV(hue, 255, 255));
     fillGradientRing(middle + offset, CHSV(hue, 255, 255), middle + width + offset, CHSV(hue, 255, 0));
 
-    if ( leadingDot ) {  // abusing fill gradient since it deals with "ring math"
+    if (leadingDot)
+    { // abusing fill gradient since it deals with "ring math"
       fillGradientRing(middle - width + offset, CHSV(0, 255, 255), middle - width + offset, CHSV(0, 255, 255));
       fillGradientRing(middle + width + offset, CHSV(0, 255, 255), middle + width + offset, CHSV(0, 255, 255));
     }
   }
 
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
   // FastLED.show() ;
 }
 #endif
-
-
 
 #ifdef RT_THREE_SIN_PAL
 
@@ -627,8 +704,9 @@ Date: March, 2015
 #define MUL1 7
 #define MUL2 6
 #define MUL3 5
-void FX::threeSinPal() {
-  static int wave1 = 0;                                                // Current phase is calculated.
+void FX::threeSinPal()
+{
+  static int wave1 = 0; // Current phase is calculated.
   static int wave2 = 0;
   static int wave3 = 0;
   static long runCounter = 0;
@@ -636,14 +714,16 @@ void FX::threeSinPal() {
   static CRGBPalette16 currentPalette(CRGB::Black);
   static CRGBPalette16 targetPalette(PartyColors_p);
 
-  if ( runCounter % 2 == 0 ) {
-    nblendPaletteTowardPalette( currentPalette, targetPalette, MAXCHANGES);
+  if (runCounter % 2 == 0)
+  {
+    nblendPaletteTowardPalette(currentPalette, targetPalette, MAXCHANGES);
 
     wave1 += beatsin8(10, -4, 4);
     wave2 += beatsin8(15, -2, 2);
     wave3 += beatsin8(12, -3, 3);
 
-    for (int k = 0; k < _meshNumLeds; k++) {
+    for (int k = 0; k < _meshNumLeds; k++)
+    {
       uint8_t tmp = sin8(MUL1 * k + wave1) + sin8(MUL2 * k + wave2) + sin8(MUL3 * k + wave3);
       _leds[k] = ColorFromPalette(currentPalette, tmp, 255);
     }
@@ -653,28 +733,55 @@ void FX::threeSinPal() {
   uint8_t secondHand = (get_millisecond_timer() / 1000) % 60;
   static uint8_t lastSecond = 99;
 
-  if ( lastSecond != secondHand) {
+  if (lastSecond != secondHand)
+  {
     lastSecond = secondHand;
-    CRGB p = CHSV( HUE_PURPLE, 255, 255);
-    CRGB g = CHSV( HUE_GREEN, 255, 255);
-    CRGB u = CHSV( HUE_BLUE, 255, 255);
+    CRGB p = CHSV(HUE_PURPLE, 255, 255);
+    CRGB g = CHSV(HUE_GREEN, 255, 255);
+    CRGB u = CHSV(HUE_BLUE, 255, 255);
     CRGB b = CRGB::Black;
     CRGB w = CRGB::White;
 
-    switch (secondHand) {
-      case  0: targetPalette = RainbowColors_p; break;
-      case  5: targetPalette = CRGBPalette16( u, u, b, b, p, p, b, b, u, u, b, b, p, p, b, b); break;
-      case 10: targetPalette = OceanColors_p; break;
-      case 15: targetPalette = CloudColors_p; break;
-      case 20: targetPalette = LavaColors_p; break;
-      case 25: targetPalette = ForestColors_p; break;
-      case 30: targetPalette = PartyColors_p; break;
-      case 35: targetPalette = CRGBPalette16( b, b, b, w, b, b, b, w, b, b, b, w, b, b, b, w); break;
-      case 40: targetPalette = CRGBPalette16( u, u, u, w, u, u, u, w, u, u, u, w, u, u, u, w); break;
-      case 45: targetPalette = CRGBPalette16( u, p, u, w, p, u, u, w, u, g, u, w, u, p, u, w); break;
-      case 50: targetPalette = CloudColors_p; break;
-      case 55: targetPalette = CRGBPalette16( u, u, u, w, u, u, p, p, u, p, p, p, u, p, p, w); break;
-      case 60: break;
+    switch (secondHand)
+    {
+    case 0:
+      targetPalette = RainbowColors_p;
+      break;
+    case 5:
+      targetPalette = CRGBPalette16(u, u, b, b, p, p, b, b, u, u, b, b, p, p, b, b);
+      break;
+    case 10:
+      targetPalette = OceanColors_p;
+      break;
+    case 15:
+      targetPalette = CloudColors_p;
+      break;
+    case 20:
+      targetPalette = LavaColors_p;
+      break;
+    case 25:
+      targetPalette = ForestColors_p;
+      break;
+    case 30:
+      targetPalette = PartyColors_p;
+      break;
+    case 35:
+      targetPalette = CRGBPalette16(b, b, b, w, b, b, b, w, b, b, b, w, b, b, b, w);
+      break;
+    case 40:
+      targetPalette = CRGBPalette16(u, u, u, w, u, u, u, w, u, u, u, w, u, u, u, w);
+      break;
+    case 45:
+      targetPalette = CRGBPalette16(u, p, u, w, p, u, u, w, u, g, u, w, u, p, u, w);
+      break;
+    case 50:
+      targetPalette = CloudColors_p;
+      break;
+    case 55:
+      targetPalette = CRGBPalette16(u, u, u, w, u, u, p, p, u, p, p, p, u, p, p, w);
+      break;
+    case 60:
+      break;
     }
   }
 
@@ -684,103 +791,110 @@ void FX::threeSinPal() {
 } // threeSinPal()
 #endif
 
-
 #ifdef RT_CYLON
-void FX::cylon() {
-  //uint8_t ledPos = beatsin8( _tempo, 0, _meshNumLeds - 1 ) ;
-  //uint8_t ledPos = beatsin8( 40, 0, _meshNumLeds - 1 ) ;
-  //uint8_t ledPos = lerp8by8( 0, _meshNumLeds-1, ease8InOutQuad beatsin8( 40 ))) ;
-  uint8_t ledPos = beatsin8( _tempo/2, 0, _meshNumLeds - 1 ) ;
-  _leds[ledPos] = CRGB::Orange ;
-  uint8_t ledPos2 = beatsin8( _tempo/2, 0, _meshNumLeds - 1, 0, 40 ) ;
-  _leds[ledPos2] = CRGB::Red ;
-  FastLED.setBrightness( maxBright ) ;
+void FX::cylon()
+{
+  // uint8_t ledPos = beatsin8( _tempo, 0, _meshNumLeds - 1 ) ;
+  // uint8_t ledPos = beatsin8( 40, 0, _meshNumLeds - 1 ) ;
+  // uint8_t ledPos = lerp8by8( 0, _meshNumLeds-1, ease8InOutQuad beatsin8( 40 ))) ;
+  uint8_t ledPos = beatsin8(_tempo / 2, 0, _meshNumLeds - 1);
+  _leds[ledPos] = CRGB::Orange;
+  uint8_t ledPos2 = beatsin8(_tempo / 2, 0, _meshNumLeds - 1, 0, 40);
+  _leds[ledPos2] = CRGB::Red;
+  FastLED.setBrightness(maxBright);
   // FastLED.show();
   fadeToBlackBy(_leds, _meshNumLeds, 255);
 }
 #endif
 
 #ifdef RT_FIRE_STRIPE
-void FX::fireStripe() {
-  static uint8_t ledPos = 0 ;
-  static uint8_t hue = 0 ;
-  int incomingByte = 0;   // for incoming serial data
-  int val ;
+void FX::fireStripe()
+{
+  static uint8_t ledPos = 0;
+  static uint8_t hue = 0;
+  int incomingByte = 0; // for incoming serial data
+  int val;
 
-  if (Serial.available() > 0) {
-     // read the incoming byte:
-     hue = Serial.parseInt();
-     val = Serial.parseInt();
+  if (Serial.available() > 0)
+  {
+    // read the incoming byte:
+    hue = Serial.parseInt();
+    val = Serial.parseInt();
 
-//     if (Serial.read() == '\n') {
-       // say what you got:
-       Serial.print("hue: ");
-       Serial.print(hue);
-       Serial.print("val: ");
-       Serial.println(val);
-  //   }
-   }
+    //     if (Serial.read() == '\n') {
+    // say what you got:
+    Serial.print("hue: ");
+    Serial.print(hue);
+    Serial.print("val: ");
+    Serial.println(val);
+    //   }
+  }
 
+  // CHSV colorStart = CHSV( beatsin8( 33, 0, 25), 255, beatsin8( 25, 10, 128));
+  // CHSV colorEnd = CHSV( beatsin8( 55, 0, 25), 255, beatsin8( 128, 128, 255));
+  CHSV colorStart = CHSV(hue, 25, val);
+  CHSV colorEnd = CHSV(hue, 255, val);
+  // CHSV colorEnd = CHSV( hue+64, 255, 255);
 
-  //CHSV colorStart = CHSV( beatsin8( 33, 0, 25), 255, beatsin8( 25, 10, 128));
-  //CHSV colorEnd = CHSV( beatsin8( 55, 0, 25), 255, beatsin8( 128, 128, 255));
-  CHSV colorStart = CHSV( hue, 25, val);
-  CHSV colorEnd = CHSV( hue, 255, val);
-  //CHSV colorEnd = CHSV( hue+64, 255, 255);
+  fill_gradient(_leds, ledPos, colorStart, ledPos + 30, colorEnd, SHORTEST_HUES);
 
-  fill_gradient(_leds, ledPos, colorStart, ledPos + 30, colorEnd, SHORTEST_HUES ) ;
-
-  FastLED.setBrightness( maxBright ) ;
+  FastLED.setBrightness(maxBright);
   // FastLED.show();
 
-//  hue++ ;
+  //  hue++ ;
 }
 #endif
-
 
 // Fill a gradient on a LED ring with any possible start positions.
 // startLed and endLed may be negative (one or both), may be larger than _meshNumLeds (one or both)
 // TODO:
 // * remove floating point calculation; replace by linear interpolation?
 
-void FX::fillGradientRing( int startLed, CHSV startColor, int endLed, CHSV endColor ) {
+void FX::fillGradientRing(int startLed, CHSV startColor, int endLed, CHSV endColor)
+{
   // Determine actual start and actual end (normalize using modulo):
-  int actualStart = mod(startLed + _meshNumLeds, _meshNumLeds)  ;
-  int actualEnd = mod(endLed + _meshNumLeds, _meshNumLeds) ;
+  int actualStart = mod(startLed + _meshNumLeds, _meshNumLeds);
+  int actualEnd = mod(endLed + _meshNumLeds, _meshNumLeds);
 
   // If beginning is at say 50, and end at 10, then we split the gradient in 2:
   // * one from 50-59
   // * one from 0-10
   // To determine which color should be at 59 and 0 we use the blend function:
-  if ( actualStart > actualEnd ) {
-    float ratio = 1.0 - float(actualEnd) / float(endLed - startLed) ; // cast to float otherwise the division won't work
-    int normalizedRatio = round( ratio * 255 ) ; // determine what ratio of startColor and endColor we need at LED 0
+  if (actualStart > actualEnd)
+  {
+    float ratio = 1.0 - float(actualEnd) / float(endLed - startLed); // cast to float otherwise the division won't work
+    int normalizedRatio = round(ratio * 255);                        // determine what ratio of startColor and endColor we need at LED 0
     CHSV colorAtLEDZero = blend(startColor, endColor, normalizedRatio);
 
     fill_gradient(_leds, actualStart, startColor, _meshNumLeds - 1, colorAtLEDZero, SHORTEST_HUES);
     fill_gradient(_leds, 0, colorAtLEDZero, actualEnd, endColor, SHORTEST_HUES);
-  } else {
+  }
+  else
+  {
     fill_gradient(_leds, actualStart, startColor, actualEnd, endColor, SHORTEST_HUES);
   }
 }
 
 // This is a little convoluted and could probably be written better :)
-void FX::fillSolidRing( int startLed, int endLed, CHSV color ) {
+void FX::fillSolidRing(int startLed, int endLed, CHSV color)
+{
   // Determine actual start and actual end (normalize using custom modulo):
-  int actualStart = mod(startLed + _meshNumLeds, _meshNumLeds)  ;
-  int actualEnd = mod(endLed + _meshNumLeds, _meshNumLeds) ;
+  int actualStart = mod(startLed + _meshNumLeds, _meshNumLeds);
+  int actualEnd = mod(endLed + _meshNumLeds, _meshNumLeds);
 
   // If beginning is at say 50, and end at 10, then we split the fill in 2:
   // * one from 50-59
   // * one from 0-10
-  if ( actualStart > actualEnd ) {
+  if (actualStart > actualEnd)
+  {
     fill_solid(_leds + actualStart, _meshNumLeds - actualStart, color);
     fill_solid(_leds, actualEnd, color);
-  } else {
+  }
+  else
+  {
     fill_solid(_leds + actualStart, actualEnd - actualStart, color);
   }
 } // end fillSolidRing()
-
 
 #ifdef USING_MPU
 
@@ -789,108 +903,129 @@ void FX::fillSolidRing( int startLed, int endLed, CHSV color ) {
 
 // This routine needs pitch/roll information in floats, so we need to retrieve it separately
 //  Suggestions how to fix this/clean it up welcome.
-int lowestPoint() {
-  Quaternion quat;        // [w, x, y, z]         quaternion container
-  VectorFloat gravity;    // [x, y, z]            gravity vector
-  float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+int lowestPoint()
+{
+  Quaternion quat;     // [w, x, y, z]         quaternion container
+  VectorFloat gravity; // [x, y, z]            gravity vector
+  float ypr[3];        // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
   mpu.dmpGetQuaternion(&quat, fifoBuffer);
   mpu.dmpGetGravity(&gravity, &quat);
   mpu.dmpGetYawPitchRoll(ypr, &quat, &gravity);
 
-  float myYprP = (ypr[1] * 180 / M_PI) ;  // Convert from radians to degrees:
-  float myYprR = (ypr[2] * 180 / M_PI) ;
+  float myYprP = (ypr[1] * 180 / M_PI); // Convert from radians to degrees:
+  float myYprR = (ypr[2] * 180 / M_PI);
 
-  int targetLedPos = 0 ;
-  static int currentLedPos = 0 ;
-  int ratio = 0 ;
-  int mySpeed = round( (abs(myYprP) + abs(myYprR) ) * 100 );
-  taskLedModeSelect.setInterval( map( mySpeed, 0, 9000, 25, 5) ) ; // Why did I do this? So weird
+  int targetLedPos = 0;
+  static int currentLedPos = 0;
+  int ratio = 0;
+  int mySpeed = round((abs(myYprP) + abs(myYprR)) * 100);
+  taskLedModeSelect.setInterval(map(mySpeed, 0, 9000, 25, 5)); // Why did I do this? So weird
 
-  if ( myYprR < 0 and myYprP < 0 ) {
-    ratio =  (abs( myYprP ) / (abs(myYprP) + abs(myYprR))) * 100 ;
-    targetLedPos = map( ratio, 0, 100, 0 , 14 );
-
-  } else if ( myYprR > 0 and myYprP < 0 ) {
-    ratio =  (abs( myYprR ) / (abs(myYprP) + abs(myYprR))) * 100 ;
-    targetLedPos = map( ratio, 0, 100, 15 , 29 );
-
-  } else if ( myYprR > 0 and myYprP > 0 ) {
-    ratio =  (abs( myYprP ) / (abs(myYprP) + abs(myYprR))) * 100 ;
-    targetLedPos = map( ratio, 0, 100, 30 , 44 );
-
-  } else if ( myYprR < 0 and myYprP > 0 ) {
-    ratio =  (abs( myYprR ) / (abs(myYprP) + abs(myYprR))) * 100 ;
-    targetLedPos = map( ratio, 0, 100, 45 , 60 );
-  } else {
-    DEBUG_PRINTLN(F("\tWTF\t")) ;  // This should never happen
+  if (myYprR < 0 and myYprP < 0)
+  {
+    ratio = (abs(myYprP) / (abs(myYprP) + abs(myYprR))) * 100;
+    targetLedPos = map(ratio, 0, 100, 0, 14);
   }
-  targetLedPos = mod(targetLedPos + OFFSET, _meshNumLeds) ;
+  else if (myYprR > 0 and myYprP < 0)
+  {
+    ratio = (abs(myYprR) / (abs(myYprP) + abs(myYprR))) * 100;
+    targetLedPos = map(ratio, 0, 100, 15, 29);
+  }
+  else if (myYprR > 0 and myYprP > 0)
+  {
+    ratio = (abs(myYprP) / (abs(myYprP) + abs(myYprR))) * 100;
+    targetLedPos = map(ratio, 0, 100, 30, 44);
+  }
+  else if (myYprR < 0 and myYprP > 0)
+  {
+    ratio = (abs(myYprR) / (abs(myYprP) + abs(myYprR))) * 100;
+    targetLedPos = map(ratio, 0, 100, 45, 60);
+  }
+  else
+  {
+    DEBUG_PRINTLN(F("\tWTF\t")); // This should never happen
+  }
+  targetLedPos = mod(targetLedPos + OFFSET, _meshNumLeds);
 
-  if ( currentLedPos != targetLedPos ) {
-    bool goClockwise = true ;
+  if (currentLedPos != targetLedPos)
+  {
+    bool goClockwise = true;
 
     // http://stackoverflow.com/questions/7428718/algorithm-or-formula-for-the-shortest-direction-of-travel-between-two-degrees-on
 
-    if ( mod(targetLedPos - currentLedPos + _meshNumLeds, _meshNumLeds) < _meshNumLeds / 2) {  // custom modulo
-      goClockwise = true ;
-    } else {
-      goClockwise = false  ;
+    if (mod(targetLedPos - currentLedPos + _meshNumLeds, _meshNumLeds) < _meshNumLeds / 2)
+    { // custom modulo
+      goClockwise = true;
+    }
+    else
+    {
+      goClockwise = false;
     }
 
     // TODO: add QuadraticEaseInOut for movement
-    if ( goClockwise ) {
-      currentLedPos++ ;
-      if ( currentLedPos > _meshNumLeds - 1 ) {
-        currentLedPos = 0 ;
-      }
-    } else {
-      currentLedPos-- ;
-      if ( currentLedPos < 0 ) {
-        currentLedPos = _meshNumLeds - 1 ;
+    if (goClockwise)
+    {
+      currentLedPos++;
+      if (currentLedPos > _meshNumLeds - 1)
+      {
+        currentLedPos = 0;
       }
     }
-
+    else
+    {
+      currentLedPos--;
+      if (currentLedPos < 0)
+      {
+        currentLedPos = _meshNumLeds - 1;
+      }
+    }
   }
 
-  return currentLedPos ;
+  return currentLedPos;
 }
 #endif
 
-void FX::fadeall(uint8_t fade_all_speed) {
-  for (uint8_t i = 0; i < _meshNumLeds; i++) {
+void FX::fadeall(uint8_t fade_all_speed)
+{
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
     _leds[i].nscale8(fade_all_speed);
   }
 }
 
-void FX::brightall(uint8_t bright_all_speed) {
-  for (uint8_t i = 0; i < _meshNumLeds; i++) {
+void FX::brightall(uint8_t bright_all_speed)
+{
+  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  {
     //_leds[i] += _leds[i].scale8(bright_all_speed) ;
-    _leds[i] += brighten8_video(bright_all_speed) ;
+    _leds[i] += brighten8_video(bright_all_speed);
   }
 }
 
-
-void FX::addGlitter( fract8 chanceOfGlitter)
+void FX::addGlitter(fract8 chanceOfGlitter)
 {
-  for ( uint8_t i = 0 ; i < 5 ; i++ ) {
-    if ( random8() < chanceOfGlitter) {
-      _leds[ random16(_meshNumLeds) ] += CRGB::White;
+  for (uint8_t i = 0; i < 5; i++)
+  {
+    if (random8() < chanceOfGlitter)
+    {
+      _leds[random16(_meshNumLeds)] += CRGB::White;
     }
   }
 }
 
-void FX::addColorGlitter( fract8 chanceOfGlitter)
+void FX::addColorGlitter(fract8 chanceOfGlitter)
 {
-  for ( uint8_t i = 0 ; i < 5 ; i++ ) {
-    if ( random8() < chanceOfGlitter) {
-      _leds[ random16(_meshNumLeds) ] += CHSV(beat8(55), 255, 255);
+  for (uint8_t i = 0; i < 5; i++)
+  {
+    if (random8() < chanceOfGlitter)
+    {
+      _leds[random16(_meshNumLeds)] += CHSV(beat8(55), 255, 255);
     }
   }
 }
 
-
-#define LONG_PRESS_MIN_TIME 500  // minimum time for a long press
+#define LONG_PRESS_MIN_TIME 500 // minimum time for a long press
 // #define SHORT_PRESS_MIN_TIME 70   // minimum time for a short press - debounce
 
 // #ifdef BUTTON_PIN
@@ -1006,10 +1141,10 @@ void FX::addColorGlitter( fract8 chanceOfGlitter)
 // #endif
 
 // Custom modulo which always returns a positive number
-uint16_t FX::mod(uint16_t x, uint16_t m) {
+uint16_t FX::mod(uint16_t x, uint16_t m)
+{
   return (x % m + m) % m;
 }
-
 
 /*
   SerialEvent occurs whenever a new data comes in the hardware serial RX. This
@@ -1054,42 +1189,50 @@ uint16_t FX::mod(uint16_t x, uint16_t m) {
 //   DEBUG_PRINTLN( ledMode ) ;
 // }
 
-uint8_t FX::QuadraticEaseIn8( uint8_t p ) {
-  int     i_100       = map(p, 0, _meshNumLeds, 0, 100); // Map current led p to percentage between 0 - 100
-  AHFloat eased_float = QuadraticEaseInOut( (float)i_100 / (float)100); // Convert to value between 0 - 1
-  int     eased_100   = (int)(eased_float * 100); // convert back to percentage
-  return  map(eased_100, 0, 100, 0, _meshNumLeds);  // convert back to LED position
+uint8_t FX::QuadraticEaseIn8(uint8_t p)
+{
+  int i_100 = map(p, 0, _meshNumLeds, 0, 100);                         // Map current led p to percentage between 0 - 100
+  AHFloat eased_float = QuadraticEaseInOut((float)i_100 / (float)100); // Convert to value between 0 - 1
+  int eased_100 = (int)(eased_float * 100);                            // convert back to percentage
+  return map(eased_100, 0, 100, 0, _meshNumLeds);                      // convert back to LED position
 }
 
-uint8_t FX::CubicEaseIn8( uint8_t p ) {
-  int     i_100       = map(p, 0, _meshNumLeds, 0, 100); // Map current led p to percentage between 0 - 100
-  AHFloat eased_float = CubicEaseInOut( (float)i_100 / (float)100); // Convert to value between 0 - 1
-  int     eased_100   = (int)(eased_float * 100); // convert back to percentage
-  return  map(eased_100, 0, 100, 0, _meshNumLeds);  // convert back to LED position
+uint8_t FX::CubicEaseIn8(uint8_t p)
+{
+  int i_100 = map(p, 0, _meshNumLeds, 0, 100);                     // Map current led p to percentage between 0 - 100
+  AHFloat eased_float = CubicEaseInOut((float)i_100 / (float)100); // Convert to value between 0 - 1
+  int eased_100 = (int)(eased_float * 100);                        // convert back to percentage
+  return map(eased_100, 0, 100, 0, _meshNumLeds);                  // convert back to LED position
 }
 
-uint8_t FX::mappedEase8InOutQuad( uint8_t p ) {
-  int     i_255       = map(p, 0, _meshNumLeds, 0, 255); // Map current led p to percentage between 0 - 100
-  int     eased_255   = ease8InOutQuad( i_255 );
-  return  map(eased_255, 0, 255, 0, _meshNumLeds);  // convert back to LED position
+uint8_t FX::mappedEase8InOutQuad(uint8_t p)
+{
+  int i_255 = map(p, 0, _meshNumLeds, 0, 255); // Map current led p to percentage between 0 - 100
+  int eased_255 = ease8InOutQuad(i_255);
+  return map(eased_255, 0, 255, 0, _meshNumLeds); // convert back to LED position
 }
 
-void FX::setAlone(boolean gAlone){
+void FX::setAlone(boolean gAlone)
+{
   _alone = gAlone;
 }
 
-void FX::setCurrentPalette(CRGBPalette16 currentPalette) {
+void FX::setCurrentPalette(CRGBPalette16 currentPalette)
+{
   _currentPalette = currentPalette;
 }
 
-void FX::setMeshNumLeds(uint16_t meshNumLeds) {
+void FX::setMeshNumLeds(uint16_t meshNumLeds)
+{
   _meshNumLeds = meshNumLeds;
 }
 
-void FX::setTempo(uint16_t tempo) {
+void FX::setTempo(uint16_t tempo)
+{
   _tempo = tempo;
 }
 
-uint16_t FX::getTempo() {
-  return _tempo ;
+uint16_t FX::getTempo()
+{
+  return _tempo;
 }
