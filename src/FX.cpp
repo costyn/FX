@@ -13,6 +13,39 @@ FX::FX(CRGB *leds, CRGB *matrixLeds, uint16_t meshNumLeds)
   _meshNumLeds = meshNumLeds;
 }
 
+void FX::setClock(FXClock clock)
+{
+  _clock = clock;
+}
+
+uint32_t FX::now()
+{
+  return _clock ? _clock() : millis();
+}
+
+// FastLED's beat functions compute (millis() - timebase). Shifting timebase by
+// (millis() - now()) makes them compute (now() - timebase) instead, so we reuse
+// FastLED's math on our own clock. Unsigned wraparound keeps this exact.
+uint32_t FX::clockOffset()
+{
+  return _clock ? (uint32_t)(millis() - _clock()) : 0;
+}
+
+uint8_t FX::beat8(accum88 bpm, uint32_t timebase)
+{
+  return ::beat8(bpm, timebase + clockOffset());
+}
+
+uint8_t FX::beatsin8(accum88 bpm, uint8_t lowest, uint8_t highest, uint32_t timebase, uint8_t phase_offset)
+{
+  return ::beatsin8(bpm, lowest, highest, timebase + clockOffset(), phase_offset);
+}
+
+uint16_t FX::beatsin16(accum88 bpm, uint16_t lowest, uint16_t highest, uint32_t timebase, uint16_t phase_offset)
+{
+  return ::beatsin16(bpm, lowest, highest, timebase + clockOffset(), phase_offset);
+}
+
 void FX::spin()
 {
   uint16_t ledpos = map8(beat8(40), 0, _meshNumLeds - 1);
@@ -580,7 +613,7 @@ void FX::jugglePal()
   static uint8_t curhue = 0;    // The current hue
   static uint8_t thisbeat = 35; // Higher = faster movement.
 
-  uint8_t secondHand = (get_millisecond_timer() / 1000) % 60; // Change '60' to a different value to change duration of the loop (also change timings below)
+  uint8_t secondHand = (now() / 1000) % 60; // Change '60' to a different value to change duration of the loop (also change timings below)
   static uint8_t lastSecond = 99;                             // This is our 'debounce' variable.
 
   if (lastSecond != secondHand)
@@ -730,7 +763,7 @@ void FX::threeSinPal()
   }
   runCounter++;
 
-  uint8_t secondHand = (get_millisecond_timer() / 1000) % 60;
+  uint8_t secondHand = (now() / 1000) % 60;
   static uint8_t lastSecond = 99;
 
   if (lastSecond != secondHand)

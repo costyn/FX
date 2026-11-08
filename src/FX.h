@@ -5,6 +5,10 @@
 #include <Arduino.h>
 #include <easing.h>
 
+// Clock used for all animation timing. LEDswarm passes the mesh-synchronised
+// clock here so every node computes the same frame. Defaults to millis().
+typedef uint32_t (*FXClock)();
+
 class FX {
   public:
     FX(CRGB * leds, uint16_t meshNumLeds );
@@ -43,16 +47,28 @@ class FX {
     void setCurrentPalette(CRGBPalette16 currentPalette);
     void setAlone(boolean gAlone);
 
+    // Time source. All FX patterns use these instead of FastLED's beat
+    // functions, because current FastLED hard-wires those to its own millis()
+    // and ignores USE_GET_MILLISECOND_TIMER.
+    void setClock(FXClock clock);
+    uint32_t now();
+    uint8_t beat8(accum88 bpm, uint32_t timebase = 0);
+    uint8_t beatsin8(accum88 bpm, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0);
+    uint16_t beatsin16(accum88 bpm, uint16_t lowest = 0, uint16_t highest = 65535, uint32_t timebase = 0, uint16_t phase_offset = 0);
+
     uint8_t QuadraticEaseIn8( uint8_t p );
     uint8_t CubicEaseIn8( uint8_t p );
     uint8_t mappedEase8InOutQuad( uint8_t p );
 
   private:
-    CRGB * _leds;
-    CRGB * _matrixLeds;
+    uint32_t clockOffset();
+
+    CRGB * _leds = nullptr;
+    CRGB * _matrixLeds = nullptr;
     CRGBPalette16 _currentPalette;
-    uint16_t _meshNumLeds;
-    uint16_t _tempo;
-    boolean _alone;
+    uint16_t _meshNumLeds = 0;
+    uint16_t _tempo = 120;
+    boolean _alone = true;
+    FXClock _clock = nullptr;
 };
 #endif
