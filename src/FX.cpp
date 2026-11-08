@@ -17,7 +17,7 @@ void FX::spin()
 {
   uint16_t ledpos = map8(beat8(40), 0, _meshNumLeds - 1);
   _leds[ledpos] = CRGB::Red;
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     _leds[i].nscale8(250);
   }
@@ -41,7 +41,7 @@ void FX::FillLEDsFromPaletteColors()
 
   uint8_t colorIndex = startIndex;
 
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     _leds[i] = ColorFromPalette(_currentPalette, colorIndex, 255, LINEARBLEND);
     colorIndex += STEPS;
@@ -472,7 +472,7 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop)
     dataSmoothing = 200 - (speed * 4);
   }
 
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     int ioffset = scale * i;
 
@@ -502,7 +502,7 @@ void FX::fillnoise8(uint8_t speed, uint8_t scale, boolean colorLoop)
 
   static uint8_t ihue = 0;
 
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     // We use the value at the i coordinate in the noise
     // array for our brightness, and a 'random' value from _meshNumLeds - 1
@@ -988,18 +988,26 @@ int lowestPoint()
 
 void FX::fadeall(uint8_t fade_all_speed)
 {
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     _leds[i].nscale8(fade_all_speed);
   }
 }
 
+// Same as FastLED's brighten8_video(), which newer FastLED releases only expose
+// as fl::brighten8_video(). Kept local so FX builds against old and new FastLED.
+static inline uint8_t fxBrighten8Video(uint8_t x)
+{
+  uint8_t ix = 255 - x;
+  return 255 - scale8_video(ix, ix);
+}
+
 void FX::brightall(uint8_t bright_all_speed)
 {
-  for (uint8_t i = 0; i < _meshNumLeds; i++)
+  for (uint16_t i = 0; i < _meshNumLeds; i++)
   {
     //_leds[i] += _leds[i].scale8(bright_all_speed) ;
-    _leds[i] += brighten8_video(bright_all_speed);
+    _leds[i] += fxBrighten8Video(bright_all_speed);
   }
 }
 
